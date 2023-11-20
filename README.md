@@ -1,4 +1,9 @@
 # hygge
+
+**NOTE:** This readme requires an update that I'm too lazy to do at the moment. Overall project remains the same, hardware selection has changed, as has the message format.
+
+**IMPORTANT:** Because I'm a licensed ham radio operator, and the LoRa radio is operating at 433 MHz, in accordance to FCC regulations for amateur radio broadcasts, the message format remains plain-text and contains my callsign. It does contain an HMAC digest for the purposes of validation, and to mitigate abuse.
+
 Arduino-based humidor temperature and humidity monitoring system.
 
 I am a nerd who enjoys cigars, and this is my fun project, so expect it to be both hacky and over-the-top.
@@ -7,7 +12,7 @@ This is being developed in multiple phases:
 
 1. [x] A thing that lives inside the humidor. Open the humidor to see the humidity.
 2. [ ] Two things that do the same work...
-  1. [ ] A thing that lives inside the humidor, and sends periodic reports wirelessly.
+  1. [x] A thing that lives inside the humidor, and sends periodic reports wirelessly.
   2. [ ] A thing that lives on a desk (or wherever), receives the reports, and displays the values.
 3. [ ] Three things that are collectively overengineered.
   1. [ ] A thing that lives inside the humidor, and sends periodic reports wirelessly.
@@ -38,6 +43,18 @@ Qi power, magnet mounts, 433 LoRa...
 Transmitted data will use the very efficient, proprietary LoRa modulation on 433MHz between +0dBm and +20dBm, most likely using a Semtech chipset.
 
 #### Data Format
+
+**UPDATED FORMAT:** `W4PHO|1|338d4cef|26|39.75|21.27|4.17`
+
+1. Callsign
+2. Message Type
+3. HMAC Digest
+4. Packet Sequence
+5. % relative humidity
+6. Temp (C)
+7. Batt Volts
+
+---
 
 **TODO:** Move this piece to its own repository.
 
