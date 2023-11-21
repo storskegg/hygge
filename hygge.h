@@ -35,6 +35,8 @@ void sendMsg(void);
 void sleepRFM95(void);
 void sleep(void);
 void bail(void);
+void bailSlow(void);
+void checkBattery(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cadence
@@ -81,31 +83,6 @@ void prepareMsg(void) {
   // Serial.print("Last Hygge: '");
   // Serial.print(buf_last_hygge);
   // Serial.println("'");
-
-  if (EEPROM_RESET || hygge_last.msg_t != 1) {
-    // Serial.print("Clearing Last Hygge...");
-    hygge_last.seq = 0;
-    hygge_last.msg_t = 1;
-    hygge_last.hotp = 0;
-    hygge_last.batt = 0.0;
-    hygge_last.humi = 0.0;
-    hygge_last.temp = 0.0;
-
-    EEPROM.put(0, hygge_last);
-    if (!EEPROM.commit()) {
-      // Serial.println("FAIL");
-      // Serial.println("\tError occurred committing cleared struct to EEPROM.");
-      bail();
-    }
-
-    EEPROM.get(0, hygge_last_c);
-    if (hygge_last_c.msg_t != 1) {
-      // Serial.println("FAIL");
-      // Serial.println("\t!assert(put, read); Did not read what we wrote");
-      bail();
-    }
-    // Serial.println("OK");
-  }
   
   hygge.seq = hygge_last.seq + 1;
 
@@ -298,6 +275,48 @@ void bail(void) {
     delay(250);
     ums3.setBlueLED(false);
     delay(250);
+    checkBattery();
+  }
+}
+
+void bailSlow(void) {
+  while (1) {
+    ums3.setBlueLED(true);
+    delay(500);
+    ums3.setBlueLED(false);
+    delay(500);
+    checkBattery();
+  }
+}
+
+// Gets the battery voltage and shows it using the neopixel LED.
+// These values are all approximate, you should do your own testing and
+// find values that work for you.
+void checkBattery() {
+  // Get the battery voltage, corrected for the on-board voltage divider
+  // Full should be around 4.2v and empty should be around 3v
+  hygge.batt = ums3.getBatteryVoltage();
+  // Serial.print("Batt = ");
+  // Serial.print(hygge.batt, 2);
+  // Serial.println(" V");
+
+  if (ums3.getVbusPresent()) {
+    ums3.setPixelPower(true);
+    ums3.setPixelBrightness(255);
+    // If USB power is present
+    if (hygge.batt < 4.0) {
+      // Charging - blue
+      ums3.setPixelColor(0x0000FF);
+    } else {
+      // Close to full - off
+      ums3.setPixelColor(0x000000);
+    }
+  } else {
+    // Else, USB power is not present (running from battery)
+    if (hygge.batt < 3.72) {
+      // Uncomment the following line to sleep when the battery is critically low
+      esp_deep_sleep_start();
+    }
   }
 }
 
